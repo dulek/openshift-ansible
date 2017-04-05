@@ -1,0 +1,44 @@
+---
+- name: Perform OpenShit ServiceAccount config
+  include: serviceaccount.yaml
+
+- name: Create kuryr manifests tempdir
+  command: mktemp -d
+  register: manifests_tmpdir
+
+- name: Create kuryr ConfigMap manifest
+  become: yes
+  template:
+    src: configmap.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/configmap.yaml"
+
+- name: Create kuryr-controller Deployment manifest
+  become: yes
+  template:
+    src: controller-deployment.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/controller-deployment.yaml"
+
+- name: Create kuryr-cni DaemonSet manifest
+  become: yes
+  template:
+    src: cni-daemonset.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/cni-daemonset.yaml"
+
+# FIXME(dulek): Switch to oc_obj.
+- name: Apply ConfigMap manifest
+  command: >
+    {{ openshift.common.client_binary }} --config={{ kubeconfig }}
+    apply -f {{ manifests_tmpdir.stdout }}/configmap.yaml
+    -n {{ kuryr_namespace }}
+
+- name: Apply Controller Deployment manifest
+  command: >
+    {{ openshift.common.client_binary }} --config={{ kubeconfig }}
+    apply -f {{ manifests_tmpdir.stdout }}/controller-deployment.yaml
+    -n {{ kuryr_namespace }}
+
+- name: Apply kuryr-cni DaemonSet manifest
+  command: >
+    {{ openshift.common.client_binary }} --config={{ kubeconfig }}
+    apply -f {{ manifests_tmpdir.stdout }}/cni-daemonset.yaml
+    -n {{ kuryr_namespace }}

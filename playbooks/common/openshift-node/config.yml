@@ -98,6 +98,8 @@
   - role: openshift_manage_node
     openshift_master_host: "{{ groups.oo_first_master.0 }}"
     when: not openshift_node_bootstrap | default(False)
+  - role: kuryr_node
+    when: openshift_use_kuryr | default(false) | bool
   tasks:
   - name: Create group for deployment type
     group_by: key=oo_nodes_deployment_type_{{ openshift.common.deployment_type }}

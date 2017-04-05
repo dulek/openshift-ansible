@@ -1,0 +1,10 @@
+---
+- name: Download delorean repos
+  become: yes
+  get_url:
+    url: "{{ item }}"
+    mode: 0644
+    dest: /etc/yum.repos.d
+  with_items:
+    - "https://trunk.rdoproject.org/centos7-master/current/delorean.repo"
+    - "https://trunk.rdoproject.org/centos7/delorean-deps.repo"
