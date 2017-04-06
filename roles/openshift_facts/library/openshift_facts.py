@@ -520,6 +520,24 @@ def set_contiv_facts_if_unset(facts):
     return facts
 
 
+def set_kuryr_facts_if_unset(facts):
+    """ Set kuryr facts if not already present in facts dict
+            dict: the facts dict updated with the kuryr facts if
+            missing
+        Args:
+            facts (dict): existing facts
+        Returns:
+            dict: the facts dict updated with the kuryr
+            facts if they were not already present
+
+    """
+    if 'common' in facts:
+        if 'use_kuryr' not in facts['common']:
+            use_kuryr = False
+            facts['common']['use_kuryr'] = use_kuryr
+    return facts
+
+
 def set_node_schedulability(facts):
     """ Set schedulable facts if not already present in facts dict
         Args:
@@ -1984,6 +2002,7 @@ class OpenShiftFacts(object):
         facts = set_calico_facts_if_unset(facts)
         facts = set_nuage_facts_if_unset(facts)
         facts = set_contiv_facts_if_unset(facts)
+        facts = set_kuryr_facts_if_unset(facts)
         facts = set_node_schedulability(facts)
         facts = set_selectors(facts)
         facts = set_identity_providers_if_unset(facts)

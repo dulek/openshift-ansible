@@ -90,6 +90,8 @@
     contiv_role: netplugin
     when: openshift.common.use_contiv | bool
   - role: nickhammond.logrotate
+  - role: kuryr_node
+    when: openshift.common.use_kuryr | bool
   - role: openshift_manage_node
     openshift_master_host: "{{ groups.oo_first_master.0 }}"
   tasks:

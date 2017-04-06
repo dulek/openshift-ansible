@@ -50,9 +50,11 @@ servingInfo:
 {% endfor %}
 {% endif %}
 volumeDirectory: {{ openshift.common.data_dir }}/openshift.local.volumes
+{% if not openshift.common.use_kuryr | bool %}
 proxyArguments:
   proxy-mode:
      - {{ openshift.node.proxy_mode }}
+{% endif %}
 volumeConfig:
   localQuota:
     perFSGroup: {{ openshift.node.local_quota_per_fsgroup }}

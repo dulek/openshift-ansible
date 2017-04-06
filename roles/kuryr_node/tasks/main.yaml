@@ -1,0 +1,93 @@
+---
+- name: Include common Kuryr role
+  include_role:
+    name: kuryr_common
+
+- name: Create CNI extraction tempdir
+  command: mktemp -d
+  register: cni_tmpdir
+
+- name: Download CNI
+  get_url:
+    url: "{{ cni_bin_url }}"
+    mode: 0644
+    dest: "{{ cni_tmpdir.stdout }}"
+  register: downloaded_tarball
+
+- name: Extract CNI
+  unarchive:
+    src: "{{ downloaded_tarball.dest }}"
+    dest:  "{{ cni_tmpdir.stdout }}"
+    remote_src: yes
+  when: downloaded_tarball.changed
+
+- name: Create CNI bin directory
+  file:
+    state: directory
+    path: "{{ cni_bin_dir }}"
+    mode: 0755
+    owner: root
+    group: root
+    recurse: yes
+
+- name: Get loopback cni plugin installed
+  copy:
+    src:  "{{ cni_tmpdir.stdout }}/loopback"
+    dest: "{{ cni_bin_dir }}/loopback"
+    remote_src: True
+    mode: 0755
+
+- name: Ensure CNI net.d exists
+  file:
+    path: /etc/cni/net.d
+    recurse: yes
+    state: directory
+
+- name: Install Kuryr CNI conf
+  become: yes
+  template:
+    src: 10-kuryr.conf.j2
+    dest: /etc/cni/net.d/10-kuryr.conf
+    mode: 0644
+    owner: root
+    group: root
+
+- name: Install Kuryr CNI
+  become: yes
+  yum: name=openstack-kuryr-kubernetes-cni state=present
+
+- name: Symlink Kuryr CNI binary to where K8s expects it
+  become: yes
+  file:
+    src: "{{ bin_dir }}/kuryr-cni"
+    dest: "{{ cni_bin_dir }}/kuryr-cni"
+    state: link
+    owner: root
+    group: root
+
+- name: Configure kuryr CNI
+  become: yes
+  template:
+    src: cni.conf.j2
+    dest: /etc/kuryr/cni.conf
+    mode: 0640
+    owner: root
+    group: root
+
+- name: Check for node config
+  stat: "path=/etc/sysconfig/{{ openshift.common.service_type }}-node"
+  register: node_config_check
+
+- name: Configure OpenShift node with disabled service proxy
+  lineinfile:
+    dest: "{{ node_config_check.stat.path }}"
+    regexp: '^OPTIONS="?(.*?)"?$'
+    backrefs: yes
+    backup: yes
+    line: 'OPTIONS="\1 --disable proxy"'
+  when: node_config_check.stat.isreg
+
+- name: force node restart to disable the proxy
+  service:
+    name: "{{ openshift.common.service_type }}-node"
+    state: restarted

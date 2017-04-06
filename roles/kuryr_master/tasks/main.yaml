@@ -1,0 +1,26 @@
+---
+- name: Include common Kuryr role
+  include_role:
+    name: kuryr_common
+
+- name: Install Kuryr CNI
+  become: yes
+  yum:
+    name: openstack-kuryr-kubernetes-controller
+    state: present
+
+- name: Configure kuryr controller
+  become: yes
+  template:
+    src: kuryr.conf.j2
+    dest: /etc/kuryr/kuryr.conf
+    mode: 0640
+    owner: root
+    group: root
+
+- name: Get Kuryr controller started
+  become: yes
+  systemd:
+    name: kuryr-controller
+    state: started
+    enabled: yes
