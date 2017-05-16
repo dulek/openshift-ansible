@@ -106,7 +106,7 @@ link_iface = {{ kuryr_cni_link_interface }}
 api_root = {{ openshift_node_master_api_url }}
 
 # Absolute path to client cert to connect to HTTPS K8S_API (string value)
-ssl_client_crt_file = {{ openshift.common.config_base }}/node/system:node:{{ openshift.common.hostname }}.cert
+ssl_client_crt_file = {{ openshift.common.config_base }}/node/system:node:{{ openshift.common.hostname }}.crt
 
 # Absolute path client key file to connect to HTTPS K8S_API (string value)
 ssl_client_key_file = {{ openshift.common.config_base }}/node/system:node:{{ openshift.common.hostname }}.key
