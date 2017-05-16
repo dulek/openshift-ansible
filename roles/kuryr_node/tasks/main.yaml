@@ -84,7 +84,7 @@
     regexp: '^OPTIONS="?(.*?)"?$'
     backrefs: yes
     backup: yes
-    line: 'OPTIONS="\1 --disable proxy"'
+    line: 'OPTIONS="\1 --disable dns,proxy,plugins"'
   when: node_config_check.stat.isreg
 
 - name: force node restart to disable the proxy
