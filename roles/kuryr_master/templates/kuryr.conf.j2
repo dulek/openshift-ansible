@@ -206,4 +206,9 @@ pod_security_groups = {{ kuryr_openstack_pod_sg_id }}
 pod_subnet = {{ kuryr_openstack_pod_subnet_id }}
 service_subnet = {{ kuryr_openstack_service_subnet_id }}
 project = {{ kuryr_openstack_pod_project_id }}
+# TODO (apuimedo): Remove the duplicated line just after this one once the
+# RDO packaging contains the upstream patch
+worker_nodes_subnet = {{ kuryr_openstack_worker_nodes_subnet_id }}
+
+[pod_vif_nested]
 worker_nodes_subnet = {{ kuryr_openstack_worker_nodes_subnet_id }}
