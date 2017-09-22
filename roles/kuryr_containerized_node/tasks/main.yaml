@@ -1,0 +1,80 @@
+---
+- name: Create CNI extraction tempdir
+  command: mktemp -d
+  register: cni_tmpdir
+
+- name: Download CNI
+  get_url:
+    url: "{{ cni_bin_url }}"
+    mode: 0644
+    dest: "{{ cni_tmpdir.stdout }}"
+  register: downloaded_tarball
+
+- name: Extract CNI
+  unarchive:
+    src: "{{ downloaded_tarball.dest }}"
+    dest:  "{{ cni_tmpdir.stdout }}"
+    remote_src: yes
+  when: downloaded_tarball.changed
+
+- name: Create CNI bin directory
+  file:
+    state: directory
+    path: "{{ cni_bin_dir }}"
+    mode: 0755
+    owner: root
+    group: root
+    recurse: yes
+
+- name: Get loopback cni plugin installed
+  copy:
+    src:  "{{ cni_tmpdir.stdout }}/loopback"
+    dest: "{{ cni_bin_dir }}/loopback"
+    remote_src: True
+    mode: 0755
+
+- name: Ensure CNI net.d exists
+  file:
+    path: /etc/cni/net.d
+    recurse: yes
+    state: directory
+
+- name: Create kuryr manifests tempdir
+  command: mktemp -d
+  register: manifests_tmpdir
+
+- name: Create kuryr ConfigMap manifest
+  become: yes
+  template:
+    src: configmap.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/configmap.yaml"
+
+- name: Create kuryr-cni DaemonSet manifest
+  become: yes
+  template:
+    src: cni-daemonset.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/cni-daemonset.yaml"
+
+- name: Apply ConfigMap manifest
+  command: "oc apply -f {{ manifests_tmpdir.stdout }}/configmap.yaml"
+
+- name: Apply kuryr-cni Daemonset manifest
+  command: "oc apply -f {{ manifests_tmpdir.stdout }}/cni-daemonset.yaml"
+
+- name: Check for node config
+  stat: "path=/etc/sysconfig/{{ openshift.common.service_type }}-node"
+  register: node_config_check
+
+- name: Configure OpenShift node with disabled service proxy
+  lineinfile:
+    dest: "{{ node_config_check.stat.path }}"
+    regexp: '^OPTIONS="?(.*?)"?$'
+    backrefs: yes
+    backup: yes
+    line: 'OPTIONS="\1 --disable dns,proxy,plugins"'
+  when: node_config_check.stat.isreg
+
+- name: force node restart to disable the proxy
+  service:
+    name: "{{ openshift.common.service_type }}-node"
+    state: restarted

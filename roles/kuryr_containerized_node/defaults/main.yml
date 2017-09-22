@@ -17,15 +17,3 @@ cni_bin_dir: /opt/cni/bin
 # URL for cni binaries
 cni_bin_url_base: "https://github.com/containernetworking/cni/releases/download/"
 cni_bin_url: "{{ cni_bin_url_base }}/{{ cni_version }}/cni-{{ cni_version }}.tgz"
-
-# Kuryr username
-kuryr_openstack_username: kuryr
-
-# Kuryr username domain
-kuryr_openstack_user_domain_name: Default
-
-# Kuryr username domain
-kuryr_openstack_project_domain_name: Default
-
-# Kuryr OpenShift namespace
-kuryr_namespace: kube-system

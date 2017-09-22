@@ -1,0 +1,25 @@
+---
+- name: Perform OpenShit ServiceAccount config
+  include: serviceaccount.yaml
+
+- name: Create kuryr manifests tempdir
+  command: mktemp -d
+  register: manifests_tmpdir
+
+- name: Create kuryr ConfigMap manifest
+  become: yes
+  template:
+    src: configmap.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/configmap.yaml"
+- name: Create kuryr-controller Deployment manifest
+  become: yes
+  template:
+    src: controller-deployment.yaml.j2
+    dest: "{{ manifests_tmpdir.stdout }}/controller-deployment.yaml"
+
+- name: Apply ConfigMap manifest
+  command: "oc apply -f {{ manifests_tmpdir.stdout }}/configmap.yaml"
+
+- name: Apply kuryr-controller Deployment manifest
+  command: "oc apply -f {{ manifests_tmpdir.stdout }}/controller-deployment.yaml"
+

@@ -125,7 +125,7 @@
     when: openshift.common.use_nuage | bool
   - role: calico_master
     when: openshift.common.use_calico | bool
-  - role: kuryr_master
+  - role: kuryr_containerized_master
     when: openshift.common.use_kuryr | bool
 
   post_tasks:
